@@ -1,0 +1,9 @@
+名称,供应商,服务性质,订阅类型,金额,货币,下次付费时间,自动续费
+Claude Pro,Anthropic,AI,年付,210.54,USD,2026-02-26,FALSE
+ChatGPT Plus,OpenAI,AI,月付,20.00,USD,2026-02-01,TRUE
+Netflix,Netflix,视频,月付,419.00,THB,2026-02-15,TRUE
+Microsoft 365,Microsoft,软件,年付,699.00,THB,2026-06-01,TRUE
+GitHub Copilot,GitHub,AI,月付,10.00,USD,2026-01-20,TRUE
+Spotify,Spotify,音乐,月付,149.00,THB,2026-02-10,FALSE
+Adobe Creative Cloud,Adobe,软件,月付,888.00,THB,2026-01-25,TRUE
+iCloud Storage,Apple,系统,月付,99.00,THB,2026-02-01,TRUE

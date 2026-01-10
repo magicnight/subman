@@ -1,0 +1,139 @@
+# MySub Manager - Cursor AI 开发规则
+
+## 项目概述
+这是一个基于 Python + Streamlit 的个人订阅管理系统。主要功能包括订阅管理、财务看板、到期提醒和数据分析。
+
+## 技术栈
+- **框架**: Streamlit 1.52+
+- **数据处理**: Pandas 2.0+
+- **数据存储**: CSV 文件
+- **可视化**: Plotly / Matplotlib
+- **Python版本**: 3.12+
+
+## 代码规范
+
+### Python 代码风格
+- 遵循 PEP 8 规范
+- 使用类型提示 (Type Hints)
+- 函数和类添加 docstring（中文或英文）
+- 变量命名使用有意义的英文名称
+- 注释使用中文，便于维护
+
+### Streamlit 最佳实践
+- 使用 `st.cache_data` 缓存数据加载函数
+- 使用 `st.cache_resource` 缓存配置和连接
+- 合理使用 `st.session_state` 管理状态
+- 页面布局优先使用 `st.columns()` 和 `st.container()`
+- 避免在循环中频繁调用 Streamlit 组件
+
+### 数据处理规范
+- CSV 文件编码统一使用 UTF-8-BOM（支持 Excel 打开中文）
+- 日期格式统一使用 ISO 8601: `YYYY-MM-DD`
+- 金额计算使用 `Decimal` 类型避免浮点误差
+- 所有外部输入数据必须验证和清洗
+
+### 文件组织
+```
+mysub-manager/
+├── src/
+│   ├── main.py              # Streamlit 主应用
+│   ├── utils/
+│   │   ├── data_loader.py   # CSV 数据加载和验证
+│   │   ├── calculator.py    # 财务计算逻辑
+│   │   └── validator.py     # 数据验证
+│   ├── components/
+│   │   ├── dashboard.py     # 仪表盘组件
+│   │   ├── table.py         # 订阅列表组件
+│   │   └── analytics.py     # 统计分析组件
+│   └── config.py            # 配置文件
+├── data/
+│   ├── subscriptions.csv    # 主数据文件
+│   ├── Service.csv          # 服务性质枚举
+│   └── Subscribe.csv        # 订阅类型枚举
+└── assets/                  # 静态资源
+```
+
+## AI 辅助开发指南
+
+### 优先使用 Claude Opus
+当你需要帮助时：
+- **架构设计**: 请 Claude 帮你设计模块结构
+- **代码生成**: 生成完整的函数和类
+- **重构优化**: 优化现有代码性能和可读性
+- **调试问题**: 分析错误日志和异常
+
+### Prompt 示例
+**好的提示**:
+```
+请帮我实现一个 Pandas 函数，功能是：
+1. 读取 subscriptions.csv 文件
+2. 计算每个订阅的月均成本（年付÷12）
+3. 返回按月均成本降序排列的 DataFrame
+要求使用类型提示，添加错误处理
+```
+
+**不好的提示**:
+```
+写个读 CSV 的函数
+```
+
+## 开发优先级
+1. **Phase 1 - MVP (当前)**
+   - 数据读取和清洗
+   - 仪表盘 KPI 展示
+   - 基础表格展示
+   
+2. **Phase 2 - 交互**
+   - CRUD 功能
+   - 饼图分析
+   
+3. **Phase 3 - 扩展**
+   - 汇率换算
+   - 通知推送
+
+## 特别注意
+
+### 数据安全
+- CSV 文件包含个人财务数据，不要提交到公开仓库
+- 使用 `.gitignore` 排除 `data/*.csv`
+- 考虑添加本地备份机制
+
+### 性能优化
+- CSV 文件小于 1000 行时无需特殊优化
+- 使用 `@st.cache_data` 避免重复读取文件
+- 大数据量时考虑迁移到 SQLite
+
+### 国际化支持
+- 界面文本使用中文（简体）
+- 日期显示考虑本地化
+- 金额单位支持 THB（泰铢）
+
+## 测试要求
+- 关键计算函数必须编写单元测试
+- 使用 `pytest` 作为测试框架
+- 测试文件命名: `test_*.py`
+
+## Git 提交规范
+- feat: 新功能
+- fix: 修复 Bug
+- docs: 文档更新
+- style: 代码格式调整
+- refactor: 重构代码
+- test: 测试相关
+- chore: 构建/工具链相关
+
+示例: `feat: 添加订阅到期预警功能`
+
+## 常见问题 (FAQ)
+
+### Q: Streamlit 页面刷新导致状态丢失？
+A: 使用 `st.session_state` 保存状态
+
+### Q: CSV 文件中文乱码？
+A: 使用 `encoding='utf-8-sig'` 读写文件
+
+### Q: 日期计算错误？
+A: 确保使用 `pd.to_datetime()` 转换日期列
+
+---
+最后更新: 2026-01-10
