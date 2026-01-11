@@ -26,15 +26,12 @@ start.bat
 **方式 2：手动安装**
 
 ```bash
-# 创建虚拟环境
-python -m venv venv
+# 安装 uv 包管理器（如未安装）
+# Windows: powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# macOS/Linux: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 激活虚拟环境
-# Windows: venv\Scripts\activate
-# macOS/Linux: source venv/bin/activate
-
-# 安装依赖
-pip install -r requirements.txt
+# 安装依赖（uv 会自动管理虚拟环境）
+uv sync
 ```
 
 ### 第三步：准备数据

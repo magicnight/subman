@@ -3,6 +3,9 @@ MySub Manager - 全局配置文件
 """
 from pathlib import Path
 
+# 版本号
+VERSION = "1.0.0"
+
 # 项目根目录
 BASE_DIR = Path(__file__).parent.parent
 

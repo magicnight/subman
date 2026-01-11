@@ -60,30 +60,37 @@ def load_subscriptions() -> pd.DataFrame:
 
 def calculate_monthly_cost(row: pd.Series) -> float:
     """
-    计算月均成本
+    计算月均成本（统一转换为泰铢 THB）
     
     Args:
         row: DataFrame 的一行数据
         
     Returns:
-        float: 月均成本
+        float: 月均成本（THB）
     """
+    # 延迟导入避免循环依赖
+    from .currency import convert_to_thb
+    
     amount = row['金额']
     cycle = row['订阅类型']
+    currency = row.get('货币', 'THB')  # 默认使用 THB
+    
+    # 先将金额转换为泰铢
+    amount_thb = convert_to_thb(amount, currency)
     
     # 根据订阅类型计算月均成本
     if cycle == '月付':
-        return amount
+        return amount_thb
     elif cycle == '年付':
-        return amount / 12
+        return amount_thb / 12
     elif cycle == '季付':
-        return amount / 3
+        return amount_thb / 3
     elif cycle == '半年付':
-        return amount / 6
+        return amount_thb / 6
     elif cycle == '终身':
         return 0  # 终身订阅不计入月均
     else:
-        return amount  # 默认按月付计算
+        return amount_thb  # 默认按月付计算
 
 
 @st.cache_data

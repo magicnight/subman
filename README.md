@@ -95,8 +95,10 @@ mysub-manager/
 │   ├── main.py                 # 🎯 Streamlit 主应用入口
 │   ├── config.py               # ⚙️ 全局配置
 │   ├── utils/                  # 🛠️ 工具函数
-│   │   ├── data_loader.py      # 数据加载和验证
-│   │   ├── calculator.py       # 财务计算逻辑
+│   │   ├── data_loader.py      # 数据加载和计算
+│   │   ├── currency.py         # 汇率换算
+│   │   ├── notifications.py    # 邮件通知
+│   │   ├── exporter.py         # 报告导出
 │   │   └── validator.py        # 数据验证
 │   └── components/             # 🧩 UI 组件
 │       ├── dashboard.py        # 仪表盘
@@ -108,7 +110,7 @@ mysub-manager/
 │   └── Subscribe.csv           # 🔄 订阅周期
 ├── assets/                     # 🎨 静态资源
 ├── tests/                      # 🧪 测试文件
-├── requirements.txt            # 📦 Python 依赖
+├── pyproject.toml              # 📦 项目配置和依赖
 ├── .gitignore                  # 🚫 Git 忽略规则
 ├── .cursorignore               # 🚫 Cursor 忽略规则
 ├── .cursorrules                # 🤖 Cursor AI 规则

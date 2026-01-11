@@ -4,10 +4,16 @@ MySub Manager - 订阅到期提醒脚本
 
 独立运行的提醒脚本，可通过定时任务（cron/Task Scheduler）调用。
 
+功能:
+- 3 天内到期的订阅自动发送提醒
+- 每个订阅每天最多发送 1 封提醒
+- 使用 --force 忽略每日限制
+
 使用方法:
-    python remind.py              # 发送 7 天内到期提醒
-    python remind.py --days 14    # 发送 14 天内到期提醒
+    python remind.py              # 发送 3 天内到期提醒
+    python remind.py --days 7     # 发送 7 天内到期提醒
     python remind.py --dry-run    # 仅显示提醒内容，不发送邮件
+    python remind.py --force      # 忽略每日限制，强制发送
 """
 import sys
 import argparse
@@ -17,12 +23,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.config import CURRENCY_SYMBOL
-from src.utils.data_loader import load_subscriptions
 from src.utils.notifications import (
     get_upcoming_subscriptions,
     format_reminder_message,
-    send_email_reminder,
-    check_and_remind
+    check_and_remind,
+    DEFAULT_WARNING_DAYS
 )
 
 
@@ -33,9 +38,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-    python remind.py              # 发送 7 天内到期提醒
-    python remind.py --days 14    # 发送 14 天内到期提醒  
+    python remind.py              # 发送 3 天内到期提醒
+    python remind.py --days 7     # 发送 7 天内到期提醒  
     python remind.py --dry-run    # 仅显示提醒内容，不发送邮件
+    python remind.py --force      # 忽略每日限制，强制发送
     python remind.py --email user@example.com  # 发送到指定邮箱
         """
     )
@@ -43,14 +49,20 @@ def main():
     parser.add_argument(
         '--days', '-d',
         type=int,
-        default=7,
-        help='提前预警天数（默认: 7）'
+        default=DEFAULT_WARNING_DAYS,
+        help=f'提前预警天数（默认: {DEFAULT_WARNING_DAYS}）'
     )
     
     parser.add_argument(
         '--dry-run',
         action='store_true',
-        help='仅显示提醒内容，不发送邮件'
+        help='仅显示提醒内容，不发送邮件也不记录日志'
+    )
+    
+    parser.add_argument(
+        '--force', '-f',
+        action='store_true',
+        help='忽略每日发送限制，强制发送'
     )
     
     parser.add_argument(
@@ -70,9 +82,8 @@ def main():
     # 加载订阅数据
     print("📂 加载订阅数据...")
     try:
-        # 需要在非 Streamlit 环境下特殊处理
         import pandas as pd
-        from src.config import SUBSCRIPTIONS_FILE, CSV_ENCODING, REQUIRED_COLUMNS
+        from src.config import SUBSCRIPTIONS_FILE, CSV_ENCODING
         
         df = pd.read_csv(SUBSCRIPTIONS_FILE, encoding=CSV_ENCODING)
         df['下次付费时间'] = pd.to_datetime(df['下次付费时间'])
@@ -87,7 +98,7 @@ def main():
     
     print()
     
-    # 获取即将到期的订阅
+    # 获取即将到期的订阅（仅用于显示）
     print(f"🔍 检查 {args.days} 天内到期的订阅...")
     upcoming = get_upcoming_subscriptions(df, args.days)
     
@@ -105,30 +116,47 @@ def main():
     print(message)
     print()
     
-    # 发送邮件
+    # 使用新的 check_and_remind API
+    print("=" * 50)
+    
     if args.dry_run:
-        print("=" * 50)
-        print("📧 [DRY RUN] 未发送邮件")
-        print("=" * 50)
-    else:
-        print("=" * 50)
-        print("📧 发送邮件提醒...")
-        success, msg = send_email_reminder(
-            upcoming,
-            recipient_email=args.email,
-            currency_symbol=CURRENCY_SYMBOL
+        print("📧 [DRY RUN] 检查发送状态...")
+        success, msg, skipped = check_and_remind(
+            df,
+            days=args.days,
+            currency_symbol=CURRENCY_SYMBOL,
+            force=args.force,
+            dry_run=True
         )
+        print(f"   ℹ️ {msg}")
+        if skipped:
+            print(f"   ⏭️ 今日已发送（跳过）: {', '.join(skipped)}")
+        print("   📧 未发送邮件，未记录日志")
+    else:
+        mode_text = "[强制模式]" if args.force else ""
+        print(f"📧 发送邮件提醒... {mode_text}")
+        
+        success, msg, skipped = check_and_remind(
+            df,
+            days=args.days,
+            currency_symbol=CURRENCY_SYMBOL,
+            force=args.force,
+            dry_run=False
+        )
+        
+        if skipped:
+            print(f"   ⏭️ 今日已发送（跳过）: {', '.join(skipped)}")
         
         if success:
             print(f"   ✅ {msg}")
         else:
             print(f"   ❌ {msg}")
             return 1
-        
-        print("=" * 50)
     
+    print("=" * 50)
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

@@ -11,6 +11,19 @@ cd mysub-manager
 
 ### 2. 创建虚拟环境
 
+推荐使用 `uv` 包管理器（自动管理虚拟环境）：
+
+```bash
+# 安装 uv（如果尚未安装）
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+或者使用传统方式：
+
 ```bash
 # macOS/Linux
 python3 -m venv venv
@@ -24,7 +37,8 @@ venv\Scripts\activate
 ### 3. 安装开发依赖
 
 ```bash
-pip install -r requirements.txt
+# 使用 uv 包管理器安装依赖
+uv sync
 ```
 
 ### 4. 配置环境变量
@@ -36,19 +50,29 @@ cp .env.example .env
 
 ## 📁 项目结构说明
 
-```
+```text
 mysub-manager/
 ├── src/                    # 源代码目录
 │   ├── main.py            # 应用入口
-│   ├── config.py          # 全局配置
+│   ├── config.py          # 全局配置（VERSION 等）
+│   ├── remind.py          # 到期提醒脚本
 │   ├── utils/             # 工具函数
-│   │   └── data_loader.py # 数据加载和处理
+│   │   ├── data_loader.py # 数据加载和计算
+│   │   ├── currency.py    # 汇率换算（BOT API）
+│   │   ├── notifications.py # 邮件通知
+│   │   ├── exporter.py    # 报告导出
+│   │   ├── history.py     # 历史趋势
+│   │   └── validator.py   # 数据验证
 │   └── components/        # UI 组件
 │       ├── dashboard.py   # 仪表盘
 │       ├── table.py       # 订阅列表
 │       └── analytics.py   # 统计分析
 ├── data/                  # 数据文件（不提交到 Git）
 ├── tests/                 # 测试文件
+│   ├── test_calculator.py
+│   ├── test_currency.py
+│   ├── test_validator.py
+│   └── test_exporter.py
 └── assets/                # 静态资源
 ```
 
