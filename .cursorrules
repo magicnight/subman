@@ -25,6 +25,7 @@
 - 合理使用 `st.session_state` 管理状态
 - 页面布局优先使用 `st.columns()` 和 `st.container()`
 - 避免在循环中频繁调用 Streamlit 组件
+- For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
 
 ### 数据处理规范
 - CSV 文件编码统一使用 UTF-8-BOM（支持 Excel 打开中文）

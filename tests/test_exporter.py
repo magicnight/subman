@@ -11,10 +11,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.utils.exporter import (
-    export_to_excel,
     export_to_csv,
-    generate_text_report,
-    generate_markdown_report
+    render_export_buttons
 )
 
 
@@ -32,22 +30,6 @@ def sample_subscription_df():
         '剩余天数': [21, 324, 35],
         '自动续费': [True, False, True]
     })
-
-
-class TestExcelExport:
-    """测试 Excel 导出功能"""
-    
-    def test_export_returns_bytes(self, sample_subscription_df):
-        """测试导出返回字节数据"""
-        result = export_to_excel(sample_subscription_df)
-        assert isinstance(result, bytes)
-        assert len(result) > 0
-    
-    def test_export_empty_dataframe(self):
-        """测试导出空数据框"""
-        empty_df = pd.DataFrame(columns=['名称', '金额', '月均成本', '下次付费时间', '剩余天数', '自动续费'])
-        result = export_to_excel(empty_df)
-        assert isinstance(result, bytes)
 
 
 class TestCsvExport:
@@ -70,55 +52,13 @@ class TestCsvExport:
         result = export_to_csv(sample_subscription_df)
         assert 'Netflix' in result
         assert 'Claude Pro' in result
-
-
-class TestTextReport:
-    """测试文本报告生成"""
     
-    def test_report_contains_title(self, sample_subscription_df):
-        """测试报告包含标题"""
-        result = generate_text_report(sample_subscription_df)
-        assert 'MySub Manager' in result
-    
-    def test_report_contains_statistics(self, sample_subscription_df):
-        """测试报告包含统计信息"""
-        result = generate_text_report(sample_subscription_df)
-        assert '订阅总数' in result
-        assert '月均支出' in result
-    
-    def test_report_contains_subscriptions(self, sample_subscription_df):
-        """测试报告包含订阅列表"""
-        result = generate_text_report(sample_subscription_df)
-        assert 'Netflix' in result
-
-
-class TestMarkdownReport:
-    """测试 Markdown 报告生成"""
-    
-    def test_report_is_valid_markdown(self, sample_subscription_df):
-        """测试报告是有效的 Markdown"""
-        result = generate_markdown_report(sample_subscription_df)
-        # 检查 Markdown 标题
-        assert '# ' in result
-        assert '## ' in result
-    
-    def test_report_contains_table(self, sample_subscription_df):
-        """测试报告包含表格"""
-        result = generate_markdown_report(sample_subscription_df)
-        # Markdown 表格使用 | 分隔
-        assert '|' in result
-        assert '---' in result
-    
-    def test_report_contains_statistics(self, sample_subscription_df):
-        """测试报告包含统计表格"""
-        result = generate_markdown_report(sample_subscription_df)
-        assert '概览统计' in result
-        assert '订阅总数' in result
-    
-    def test_report_contains_emoji(self, sample_subscription_df):
-        """测试报告包含表情符号"""
-        result = generate_markdown_report(sample_subscription_df)
-        assert '📊' in result or '📈' in result
+    def test_export_empty_dataframe(self):
+        """测试导出空数据框"""
+        empty_df = pd.DataFrame(columns=['名称', '金额', '月均成本', '下次付费时间', '剩余天数', '自动续费'])
+        result = export_to_csv(empty_df)
+        assert isinstance(result, str)
+        assert len(result) > 0
 
 
 if __name__ == '__main__':

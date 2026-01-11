@@ -29,10 +29,13 @@ def render_subscription_table(df: pd.DataFrame):
     # 数据展示
     display_df = prepare_display_dataframe(df)
     
+    # 移动端提示
+    st.info("📱 移动端提示：左右滑动查看完整表格")
+    
     # 使用 Streamlit 的数据编辑器
     st.dataframe(
         display_df,
-        width="stretch",
+        width='stretch',
         hide_index=True,
         column_config={
             "名称": st.column_config.TextColumn("服务名称", width="medium"),
@@ -76,7 +79,9 @@ def render_subscription_table(df: pd.DataFrame):
 
 
 def render_filters(df: pd.DataFrame):
-    """渲染筛选和排序选项"""
+    """渲染筛选和排序选项（移动端优化）"""
+    # 移动端：垂直堆叠；桌面端：3列布局
+    # 使用 CSS 媒体查询自动适配，这里保持代码简洁
     col1, col2, col3 = st.columns(3)
     
     with col1:

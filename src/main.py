@@ -15,6 +15,7 @@ from src.utils import (
     load_subscribe_types,
     add_subscription
 )
+from src.utils.responsive import inject_responsive_css
 from src.components import (
     render_dashboard,
     render_subscription_table,
@@ -26,6 +27,9 @@ def main():
     """主函数"""
     # 页面配置
     st.set_page_config(**STREAMLIT_CONFIG)
+    
+    # 注入响应式 CSS（移动端优化）
+    inject_responsive_css()
     
     # 自定义 CSS
     st.markdown("""
@@ -78,6 +82,11 @@ def render_sidebar():
         
         st.markdown("---")
         
+        # 数据管理功能
+        render_data_management()
+        
+        st.markdown("---")
+        
         # 新增订阅表单
         render_add_form()
         
@@ -102,6 +111,27 @@ def render_sidebar():
             - 订阅数: {len(df)} 个
             - 月均支出: {CURRENCY_SYMBOL}{total_monthly:.2f}
             """)
+
+
+def render_data_management():
+    """渲染数据管理功能（导入/导出）"""
+    from src.utils.importer import render_import_section
+    from src.utils.exporter import render_export_buttons
+    
+    st.markdown("### 💾 数据管理")
+    
+    # 使用标签页组织导入和导出
+    tab1, tab2 = st.tabs(["📥 导入数据", "📤 导出数据"])
+    
+    with tab1:
+        render_import_section()
+    
+    with tab2:
+        df = load_subscriptions()
+        if not df.empty:
+            render_export_buttons(df)
+        else:
+            st.info("📭 暂无数据可导出")
 
 
 def render_add_form():

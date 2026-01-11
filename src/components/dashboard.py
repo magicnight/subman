@@ -44,7 +44,7 @@ def render_dashboard(df: pd.DataFrame):
 
 
 def render_warning_banner(df: pd.DataFrame):
-    """渲染到期预警横幅"""
+    """渲染到期预警横幅（移动端优化）"""
     # 筛选所有即将到期的订阅（包括自动续费和手动续费）
     upcoming = df[
         (df['剩余天数'] <= WARNING_DAYS) & 
@@ -72,26 +72,22 @@ def render_warning_banner(df: pd.DataFrame):
             if not auto_renew.empty:
                 st.markdown("**🔄 自动续费** - 以下订阅将自动扣款：")
                 for _, row in auto_renew.iterrows():
-                    col1, col2, col3 = st.columns([2, 1, 1])
-                    with col1:
-                        st.write(f"**{row['名称']}** ({row['服务性质']})")
-                    with col2:
-                        st.write(f"⏰ {row['剩余天数']} 天后")
-                    with col3:
-                        st.write(f"💰 {CURRENCY_SYMBOL}{row['金额']:.2f}")
+                    # 移动端优化：使用更紧凑的布局
+                    st.markdown(f"""
+                    **{row['名称']}** ({row['服务性质']})  
+                    ⏰ {row['剩余天数']} 天后 | 💰 {CURRENCY_SYMBOL}{row['金额']:.2f}
+                    """)
                 st.markdown("")
             
             # 手动续费部分
             if not manual_renew.empty:
                 st.markdown("**⚠️ 需手动续期** - 以下订阅如不续费将过期：")
                 for _, row in manual_renew.iterrows():
-                    col1, col2, col3 = st.columns([2, 1, 1])
-                    with col1:
-                        st.write(f"**{row['名称']}** ({row['服务性质']})")
-                    with col2:
-                        st.write(f"⏰ {row['剩余天数']} 天后")
-                    with col3:
-                        st.write(f"💰 {CURRENCY_SYMBOL}{row['金额']:.2f}")
+                    # 移动端优化：使用更紧凑的布局
+                    st.markdown(f"""
+                    **{row['名称']}** ({row['服务性质']})  
+                    ⏰ {row['剩余天数']} 天后 | 💰 {CURRENCY_SYMBOL}{row['金额']:.2f}
+                    """)
     else:
         st.success("✅ 近期无需关注的到期订阅")
 
