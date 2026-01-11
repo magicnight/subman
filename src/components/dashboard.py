@@ -140,10 +140,30 @@ def render_quick_stats(df: pd.DataFrame):
     
     st.markdown("---")
     
-    # 最贵的 3 个订阅
-    st.markdown("#### 💎 最贵的订阅")
-    top3 = df.nlargest(3, '月均成本')[['名称', '服务性质', '月均成本']]
+    # 最贵的订阅 和 渠道统计 并排显示
+    col1, col2 = st.columns(2)
     
-    for idx, row in top3.iterrows():
-        st.write(f"🏆 **{row['名称']}** ({row['服务性质']}) - {CURRENCY_SYMBOL}{row['月均成本']:.2f}/月")
-
+    with col1:
+        # 最贵的 3 个订阅
+        st.markdown("#### 💎 最贵的订阅")
+        top3 = df.nlargest(3, '月均成本')[['名称', '服务性质', '月均成本']]
+        
+        for idx, row in top3.iterrows():
+            st.write(f"🏆 **{row['名称']}** ({row['服务性质']}) - {CURRENCY_SYMBOL}{row['月均成本']:.2f}/月")
+    
+    with col2:
+        # 供应商渠道统计 - Top 3
+        st.markdown("#### 🏪 渠道统计（按供应商）")
+        
+        # 过滤掉空的供应商
+        df_with_supplier = df[df['供应商'].notna() & (df['供应商'] != '')]
+        
+        if not df_with_supplier.empty:
+            supplier_stats = df_with_supplier.groupby('供应商')['月均成本'].sum().sort_values(ascending=False)
+            top3_suppliers = supplier_stats.head(3)
+            
+            for supplier, cost in top3_suppliers.items():
+                count = len(df_with_supplier[df_with_supplier['供应商'] == supplier])
+                st.write(f"🏢 **{supplier}**: {CURRENCY_SYMBOL}{cost:.2f}/月（{count} 个订阅）")
+        else:
+            st.info("暂无供应商数据")

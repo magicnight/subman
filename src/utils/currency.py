@@ -143,7 +143,7 @@ def fetch_exchange_rates_from_bot(date: Optional[str] = None) -> dict[str, Decim
     从泰国央行 API 获取汇率数据
     
     Args:
-        date: 日期字符串 (YYYY-MM-DD)
+        date: 日期字符串 (YYYY-MM-DD)，如果为 None 则自动查找最近有效的工作日
         
     Returns:
         dict: 货币代码 -> THB 汇率的映射
@@ -155,12 +155,17 @@ def fetch_exchange_rates_from_bot(date: Optional[str] = None) -> dict[str, Decim
         _rate_status['message'] = 'BOT_API_TOKEN 未配置，请在 .env 文件中设置'
         return {}
     
-    if date is None:
-        yesterday = datetime.now() - timedelta(days=1)
-        date = yesterday.strftime('%Y-%m-%d')
-    
     _rate_status['status'] = 'updating'
     _rate_status['message'] = '正在从泰国央行获取汇率...'
+    
+    # 如果没有指定日期，尝试最近 7 天（避免周末/假期无数据）
+    dates_to_try = []
+    if date is None:
+        for days_ago in range(1, 8):
+            target = datetime.now() - timedelta(days=days_ago)
+            dates_to_try.append(target.strftime('%Y-%m-%d'))
+    else:
+        dates_to_try = [date]
     
     try:
         conn = http.client.HTTPSConnection(BOT_API_HOST, timeout=10)
@@ -170,45 +175,53 @@ def fetch_exchange_rates_from_bot(date: Optional[str] = None) -> dict[str, Decim
             'Authorization': BOT_API_TOKEN
         }
         
-        query = f"?start_period={date}&end_period={date}"
-        conn.request("GET", f"{BOT_API_PATH}{query}", headers=headers)
-        res = conn.getresponse()
-        
-        if res.status != 200:
-            _rate_status['status'] = 'error'
-            _rate_status['message'] = f'API 返回状态码: {res.status}'
-            return {}
-        
-        data = json.loads(res.read().decode('utf-8'))
-        conn.close()
-        
-        # 解析响应
-        rates = {'THB': Decimal('1.0')}
-        
-        result = data.get('result', {})
-        data_detail = result.get('data', {}).get('data_detail', [])
-        
-        if isinstance(data_detail, list):
-            for item in data_detail:
-                currency_id = item.get('currency_id', '')
-                mid_rate = item.get('mid_rate', '')
-                
-                if currency_id and mid_rate:
-                    try:
-                        rates[currency_id] = Decimal(mid_rate)
-                    except:
-                        pass
-        
-        if len(rates) > 1:
-            _rate_status['status'] = 'success'
-            _rate_status['message'] = f'汇率更新成功，获取到 {len(rates)} 种货币'
-            _rate_status['last_updated'] = datetime.now()
-            _rate_status['source'] = 'Bank of Thailand API'
+        # 遍历日期列表，直到找到有效数据
+        for try_date in dates_to_try:
+            query = f"?start_period={try_date}&end_period={try_date}"
+            conn.request("GET", f"{BOT_API_PATH}{query}", headers=headers)
+            res = conn.getresponse()
             
-            # 保存到 CSV
-            save_rates_to_csv(rates)
+            if res.status != 200:
+                _rate_status['status'] = 'error'
+                _rate_status['message'] = f'API 返回状态码: {res.status}'
+                return {}
+            
+            data = json.loads(res.read().decode('utf-8'))
+            
+            # 解析响应
+            rates = {'THB': Decimal('1.0')}
+            
+            result = data.get('result', {})
+            data_detail = result.get('data', {}).get('data_detail', [])
+            
+            if isinstance(data_detail, list):
+                for item in data_detail:
+                    currency_id = item.get('currency_id', '')
+                    mid_rate = item.get('mid_rate', '')
+                    
+                    if currency_id and mid_rate:
+                        try:
+                            rates[currency_id] = Decimal(mid_rate)
+                        except:
+                            pass
+            
+            # 如果获取到有效汇率，更新状态并返回
+            if len(rates) > 1:
+                _rate_status['status'] = 'success'
+                _rate_status['message'] = f'汇率更新成功（{try_date}），获取到 {len(rates)} 种货币'
+                _rate_status['last_updated'] = datetime.now()
+                _rate_status['source'] = 'Bank of Thailand API'
+                
+                # 保存到 CSV
+                save_rates_to_csv(rates)
+                conn.close()
+                return rates
         
-        return rates
+        # 遍历所有日期都没有有效数据
+        conn.close()
+        _rate_status['status'] = 'error'
+        _rate_status['message'] = '未能获取有效汇率数据（可能为假期）'
+        return {'THB': Decimal('1.0')}
         
     except Exception as e:
         _rate_status['status'] = 'error'

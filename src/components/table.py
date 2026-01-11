@@ -5,8 +5,8 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-from ..config import CURRENCY_SYMBOL
 from ..utils import delete_subscription, update_subscription, load_service_types, load_subscribe_types
+from ..utils.currency import get_currency_symbol
 
 
 def render_subscription_table(df: pd.DataFrame):
@@ -38,14 +38,12 @@ def render_subscription_table(df: pd.DataFrame):
             "名称": st.column_config.TextColumn("服务名称", width="medium"),
             "服务性质": st.column_config.TextColumn("类型", width="small"),
             "订阅类型": st.column_config.TextColumn("周期", width="small"),
-            "金额": st.column_config.NumberColumn(
+            "金额": st.column_config.TextColumn(
                 "金额",
-                format=f"{CURRENCY_SYMBOL}%.2f",
                 width="small"
             ),
-            "月均成本": st.column_config.NumberColumn(
+            "月均成本": st.column_config.TextColumn(
                 "月均",
-                format=f"{CURRENCY_SYMBOL}%.2f",
                 width="small"
             ),
             "下次付费时间": st.column_config.DateColumn(
@@ -140,6 +138,19 @@ def prepare_display_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             ascending=st.session_state.get('sort_asc', True)
         )
     
+    # 格式化金额列，使用每条订阅实际的货币符号
+    def format_amount_with_currency(row, amount_col):
+        currency = row.get('货币', 'THB') if pd.notna(row.get('货币')) else 'THB'
+        symbol = get_currency_symbol(currency)
+        return f"{symbol}{row[amount_col]:.2f}"
+    
+    display_df['金额'] = display_df.apply(
+        lambda row: format_amount_with_currency(row, '金额'), axis=1
+    )
+    display_df['月均成本'] = display_df.apply(
+        lambda row: format_amount_with_currency(row, '月均成本'), axis=1
+    )
+    
     # 选择要显示的列
     display_columns = [
         '名称',
@@ -172,15 +183,15 @@ def render_edit_section(df: pd.DataFrame):
         index = df[df['名称'] == selected_name].index[0]
         current_data = df.loc[index]
         
-        # 编辑表单
-        with st.form("edit_subscription_form"):
+        # 使用动态 key，确保每次选择变化时表单完全重建
+        form_key = f"edit_subscription_form_{selected_name}"
+        with st.form(form_key):
             col1, col2 = st.columns(2)
             
             with col1:
                 new_name = st.text_input(
                     "服务名称",
-                    value=current_data['名称'],
-                    key="edit_name"
+                    value=current_data['名称']
                 )
                 
                 service_types = load_service_types()
@@ -188,8 +199,7 @@ def render_edit_section(df: pd.DataFrame):
                 new_service = st.selectbox(
                     "服务性质",
                     service_types,
-                    index=current_service_idx,
-                    key="edit_service"
+                    index=current_service_idx
                 )
                 
                 new_amount = st.number_input(
@@ -197,8 +207,7 @@ def render_edit_section(df: pd.DataFrame):
                     value=float(current_data['金额']),
                     min_value=0.0,
                     step=0.01,
-                    format="%.2f",
-                    key="edit_amount"
+                    format="%.2f"
                 )
                 
                 # 货币选择
@@ -207,16 +216,14 @@ def render_edit_section(df: pd.DataFrame):
                 new_currency = st.selectbox(
                     "货币",
                     SUPPORTED_CURRENCIES,
-                    index=current_currency_idx,
-                    key="edit_currency"
+                    index=current_currency_idx
                 )
             
             with col2:
                 supplier_value = current_data.get('供应商', '') if pd.notna(current_data.get('供应商', '')) else ''
                 new_supplier = st.text_input(
                     "供应商",
-                    value=supplier_value,
-                    key="edit_supplier"
+                    value=supplier_value
                 )
                 
                 subscribe_types = load_subscribe_types()
@@ -224,8 +231,7 @@ def render_edit_section(df: pd.DataFrame):
                 new_cycle = st.selectbox(
                     "订阅类型",
                     subscribe_types,
-                    index=current_type_idx,
-                    key="edit_cycle"
+                    index=current_type_idx
                 )
                 
                 # 处理日期
@@ -234,14 +240,12 @@ def render_edit_section(df: pd.DataFrame):
                     current_date = current_date.date()
                 new_date = st.date_input(
                     "下次付费时间",
-                    value=current_date,
-                    key="edit_date"
+                    value=current_date
                 )
             
             new_auto_renew = st.checkbox(
                 "自动续费",
-                value=bool(current_data['自动续费']),
-                key="edit_auto_renew"
+                value=bool(current_data['自动续费'])
             )
             
             # 提交按钮
