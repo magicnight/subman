@@ -29,7 +29,7 @@ if not exist "data\subscriptions.csv" (
 
 echo.
 echo ✨ 启动 Streamlit 应用...
-echo 🌐 浏览器将自动打开 http://localhost:8501
+echo 🌐 浏览器将自动打开
 echo 📝 按 Ctrl+C 停止应用
 echo.
 

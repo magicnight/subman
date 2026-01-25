@@ -1,0 +1,22 @@
+[Unit]
+Description=MySub Manager - Subscription Management Tool
+After=network.target
+
+[Service]
+Type=simple
+User=your_username
+Group=your_group
+WorkingDirectory=/opt/subman
+Environment="PATH=/usr/local/bin:/usr/bin:/bin:/home/your_username/.cargo/bin"
+ExecStart=/home/your_username/.cargo/bin/uv run streamlit run src/main.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true
+Restart=always
+RestartSec=10
+StandardOutput=append:/opt/subman/logs/app.log
+StandardError=append:/opt/subman/logs/error.log
+
+# 安全设置
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

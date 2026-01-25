@@ -30,7 +30,7 @@ if (-not (Test-Path "data\subscriptions.csv")) {
 
 Write-Host ""
 Write-Host "✨ 启动 Streamlit 应用..." -ForegroundColor Magenta
-Write-Host "🌐 浏览器将自动打开 http://localhost:8501" -ForegroundColor Cyan
+Write-Host "🌐 浏览器将自动打开" -ForegroundColor Cyan
 Write-Host "📝 按 Ctrl+C 停止应用" -ForegroundColor Gray
 Write-Host ""
 

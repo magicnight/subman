@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.venv
+venv/
+env/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# 日志
+logs/
+*.log
+
+# 测试
+tests/
+.pytest_cache
+.coverage
+htmlcov/
+
+# 文档
+*.md
+!README.md
+
+# 部署文件
+deploy.sh
+*.service
+nginx.conf.example
+docker-compose.yml
+
+# 数据文件（可选，如果不想在镜像中包含数据）
+# data/*.csv
+
+# 其他
+.DS_Store
+Thumbs.db

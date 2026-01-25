@@ -2,16 +2,15 @@
 Claude Pro,Anthropic,AI,年付,210.54,USD,2026-02-26,FALSE
 Netflix,Netflix,视频,月付,419.0,THB,2026-02-15,TRUE
 Microsoft 365,Microsoft,软件,年付,498.0,CNY,2030-07-22,FALSE
-iCloud Storage 2T,Apple,云存储,月付,399.0,THB,2026-01-13,TRUE
+iCloud Storage 2T,Apple,云存储,月付,399.0,THB,2026-02-13,TRUE
 Youtube Premium,Google,视频,月付,179.0,THB,2026-01-26,TRUE
-Apple One,Apple,系统,月付,449.0,THB,2026-01-18,TRUE
+Apple One,Apple,系统,月付,449.0,THB,2026-02-18,TRUE
 Disney +,Disney Inc.,视频,年付,2290.0,THB,2026-12-25,FALSE
 1Password,1Password,软件,年付,35.88,USD,2026-12-12,TRUE
 Google Play Plus,Google,游戏,年付,719.0,THB,2026-10-13,TRUE
-Cursor,Cursor,AI,月付,20.0,USD,2026-01-23,TRUE
-Genspark,MainFunc,AI,年付,234.5,USD,2026-01-16,FALSE
+Cursor,Cursor,AI,年付,192.0,USD,2027-01-25,TRUE
+Genspark,MainFunc,AI,年付,139.92,USD,2027-01-16,TRUE
 Google AI Pro,Google,AI,年付,7900.0,THB,2026-04-11,TRUE
-Eclipse Your Self,Tantsissa,软件,年付,699.0,THB,2026-01-17,TRUE
 Bilibili,上海宽娱数码科技有限公司,视频,年付,148.0,CNY,2030-07-08,FALSE
 百度网盘,Baidu,云存储,年付,360.0,CNY,2026-05-13,FALSE
 坚果云,上海亦净网络科技有限公司,云存储,年付,199.9,CNY,2026-12-09,FALSE
@@ -19,3 +18,4 @@ QQ SVIP,Tencent Inc.,其他,年付,178.0,CNY,2027-01-14,FALSE
 Grab Premium,Grab,其他,年付,99.0,THB,2027-01-09,TRUE
 "Duolingo Super, Family",Duolingo,其他,年付,1500.0,THB,2026-12-28,TRUE
 Drivvo - Vehicle Manager,,其他,年付,59.0,THB,2026-09-28,TRUE
+GLM Coding,Zhipu,AI,年付,172.8,CNY,2027-01-05,FALSE
