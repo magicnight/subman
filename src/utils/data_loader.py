@@ -15,6 +15,67 @@ from ..config import (
 )
 
 
+def _add_period(dt: pd.Timestamp, cycle: str) -> pd.Timestamp | None:
+    """根据订阅类型将日期加一个周期。终身或未知类型返回 None。"""
+    if cycle == '月付':
+        return dt + pd.DateOffset(months=1)
+    if cycle == '年付':
+        return dt + pd.DateOffset(years=1)
+    if cycle == '季付':
+        return dt + pd.DateOffset(months=3)
+    if cycle == '半年付':
+        return dt + pd.DateOffset(months=6)
+    return None  # 终身或未知类型
+
+
+def apply_auto_renewals(df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
+    """
+    对已过期且勾选「自动续费」的订阅，按订阅类型将「下次付费时间」推进到超过今天。
+
+    若用户长期未打开应用，会多次叠加周期直到下次付费时间 > 今日。
+    终身订阅不处理；未知订阅类型跳过。
+
+    Args:
+        df: 已含「剩余天数」「自动续费」「订阅类型」「下次付费时间」的数据框
+
+    Returns:
+        (df, changed): 修改后的数据框与是否有变更
+    """
+    today = pd.Timestamp.now().normalize()
+    mask = (
+        (df['剩余天数'] < 0) &
+        (df['自动续费'] == True) &
+        (df['订阅类型'] != '终身')
+    )
+    changed = False
+    for idx in df.index[mask]:
+        next_dt = pd.Timestamp(df.at[idx, '下次付费时间'])
+        if pd.isna(next_dt):
+            continue
+        cycle = df.at[idx, '订阅类型']
+        orig = next_dt
+        while next_dt < today:
+            new_dt = _add_period(next_dt, cycle)
+            if new_dt is None:
+                break
+            next_dt = new_dt
+        if next_dt != orig:
+            df.at[idx, '下次付费时间'] = next_dt
+            changed = True
+    return df, changed
+
+
+def save_subscriptions_core(df: pd.DataFrame) -> None:
+    """
+    将订阅数据写回 CSV，不调用 st 或清除缓存。
+    供 load_subscriptions 与 remind 等非 UI 场景使用。失败时抛出异常。
+    """
+    save_df = df.drop(columns=['剩余天数', '月均成本'], errors='ignore')
+    save_df['下次付费时间'] = pd.to_datetime(save_df['下次付费时间']).dt.strftime('%Y-%m-%d')
+    save_df['自动续费'] = save_df['自动续费'].map({True: 'TRUE', False: 'FALSE'})
+    save_df.to_csv(SUBSCRIPTIONS_FILE, index=False, encoding=CSV_ENCODING)
+
+
 @st.cache_data(ttl=300)  # 缓存 5 分钟
 def load_subscriptions() -> pd.DataFrame:
     """
@@ -42,7 +103,17 @@ def load_subscriptions() -> pd.DataFrame:
         
         # 计算衍生字段
         df['剩余天数'] = (df['下次付费时间'] - pd.Timestamp.now()).dt.days
-        
+
+        # 对已过期且自动续费的订阅，按周期推进「下次付费时间」并写回
+        df, changed = apply_auto_renewals(df)
+        if changed:
+            df['剩余天数'] = (df['下次付费时间'] - pd.Timestamp.now()).dt.days
+            try:
+                save_subscriptions_core(df)
+                st.cache_data.clear()
+            except Exception as e:
+                st.error(f"❌ 自动续期后保存失败: {str(e)}")
+
         # 计算月均成本
         df['月均成本'] = df.apply(lambda row: calculate_monthly_cost(row), axis=1)
         
@@ -126,23 +197,9 @@ def save_subscriptions(df: pd.DataFrame) -> bool:
         bool: 保存是否成功
     """
     try:
-        # 移除计算字段
-        save_df = df.drop(columns=['剩余天数', '月均成本'], errors='ignore')
-        
-        # 格式化日期
-        save_df['下次付费时间'] = pd.to_datetime(save_df['下次付费时间']).dt.strftime('%Y-%m-%d')
-        
-        # 格式化布尔值
-        save_df['自动续费'] = save_df['自动续费'].map({True: 'TRUE', False: 'FALSE'})
-        
-        # 保存文件
-        save_df.to_csv(SUBSCRIPTIONS_FILE, index=False, encoding=CSV_ENCODING)
-        
-        # 清除缓存以重新加载数据
+        save_subscriptions_core(df)
         st.cache_data.clear()
-        
         return True
-        
     except Exception as e:
         st.error(f"❌ 保存数据失败: {str(e)}")
         return False

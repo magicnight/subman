@@ -84,20 +84,31 @@ def main():
     try:
         import pandas as pd
         from src.config import SUBSCRIPTIONS_FILE, CSV_ENCODING
-        
+        from src.utils.data_loader import apply_auto_renewals, save_subscriptions_core
+
         df = pd.read_csv(SUBSCRIPTIONS_FILE, encoding=CSV_ENCODING)
         df['下次付费时间'] = pd.to_datetime(df['下次付费时间'])
         df['金额'] = pd.to_numeric(df['金额'], errors='coerce')
         df['自动续费'] = df['自动续费'].map({'TRUE': True, 'FALSE': False, True: True, False: False})
         df['剩余天数'] = (df['下次付费时间'] - pd.Timestamp.now()).dt.days
-        
+
+        # 对已过期且自动续费的订阅，按周期推进「下次付费时间」并写回
+        df, changed = apply_auto_renewals(df)
+        if changed:
+            df['剩余天数'] = (df['下次付费时间'] - pd.Timestamp.now()).dt.days
+            try:
+                save_subscriptions_core(df)
+                print("   🔄 已对到期的自动续费订阅更新下次付费时间并写回")
+            except Exception as e:
+                print(f"   ⚠️ 自动续期后保存失败: {e}")
+
         print(f"   ✅ 已加载 {len(df)} 条订阅记录")
     except Exception as e:
         print(f"   ❌ 加载失败: {e}")
         return 1
-    
+
     print()
-    
+
     # 获取即将到期的订阅（仅用于显示）
     print(f"🔍 检查 {args.days} 天内到期的订阅...")
     upcoming = get_upcoming_subscriptions(df, args.days)
